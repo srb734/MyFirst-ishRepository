@@ -1,0 +1,263 @@
+---
+title: "Chapter 10 Assignment"
+author: "Sammi Bergman"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+ problems 1, 2, 3, 4
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r libs}
+library(tidyverse)
+```
+
+### Exercise 1 {-}
+
+Write a function that calculates the density function of a Uniform continuous variable on the interval $\left(a,b\right)$. The uniform density function is defined as 
+
+$$
+f\left(x\right)=\begin{cases}
+    \frac{1}{b-a} & \;\;\;\textrm{if }a\le x\le b\\
+    0 & \;\;\;\textrm{otherwise}
+    \end{cases}
+$$
+which looks like this
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.height=2}
+library(ggplot2) 
+library(dplyr) 
+data <- data.frame(x = seq(-.25,1.25, length=301)) 
+data <- data %>% mutate( y = dunif(x,0,1) ) 
+ggplot(data, aes(x=x, y=y)) +
+  geom_step() +   # geom_step is similar to geom_line() but for step functions
+  scale_x_continuous( breaks=c(0,1), labels=c('a','b') ) +
+  scale_y_continuous( breaks=c(0,1), labels=c(0,expression(1 / (b-a) )) ) +
+  labs(y='density') + theme_bw()
+```
+
+Your goal for this exercise is to write a function `duniform(x, a, b)` that takes an arbitrary value of `x` and parameters `a` and `b` and returns the appropriate height of the density function ($1/(b-a)$). For various values of `x`, `a`, and `b`, demonstrate that your function returns the correct density value.
+
+**a)** Write your function without regard for it working with vectors of data. Demonstrate that it works by calling the function three times, once where $x< a$, once where $a < x < b$, and finally once where $b < x$.
+
+```{r}
+#args: arb. x, params a,b
+
+duniform<- function(x, a, b) {
+  if(b-a == 0) {
+    return(0) ##if a = b, the function can return div by 0 error
+  }
+  if(a <= x & x <= b) {
+    new.value <- 1 / (b-a)
+    return(new.value)
+  }
+  else {
+    return(0)
+  }
+  
+}
+
+#plug it in
+example1 <- duniform(2, 3, 4) #x < a
+example2 <- duniform(2, 1, 3) #a < x < b
+example3 <- duniform(3, 1, 2) # b < x
+
+#display results
+example1
+example2
+example3
+```
+
+
+**b)** Next lets improve our function to work correctly for a vector of `x` values. Modify your function in part (a) so that the core logic uses a `for`-loop statement and the loop moves through each element of `x` in succession. Since this is a bit more of a complex task, your function should look something like this:
+
+```{r, eval=FALSE}
+duniform <- function(x, a, b){
+  output <- NULL
+  for( i in x ){ # Set the for loop to look at each element of x
+    temp <- x[i] #NOPE WRONG IGNORE
+    if(x[i] == 0 | ){ #What should this logical expression be?
+       
+      #Something ought to be saved in output[i]
+      output[i] <- temp2
+    }
+    else{
+      # ???  Something else ought to be saved in output[i]
+      output[i] <- 0
+    }
+  }
+  return(output)
+}
+```
+
+
+```{r goodDunif}
+duniform <- function(x, a, b){
+  output <- NULL
+  for( i in 1:length(x) ) {  # Set the for loop to look at each element of x, x is float so and needs int iteration -> use length 
+    if(x[i] >= a & x[i] <= b ){  # What should this logical expression be?
+      #Something ought to be saved in output[i]
+      output[i] <- 1 / (b-a)
+
+    }else{
+      output[i] <- 0
+    }
+  }
+  return(output)
+}
+```
+
+Verify that your function works correctly by running the following code:
+
+```{r, eval=TRUE, fig.height=3}
+data.frame( x=seq(-1, 12, by=.001) ) %>%
+  mutate( y = duniform(x, 4, 8) ) %>%
+  ggplot( aes(x=x, y=y) ) +
+  geom_step()
+```
+        
+**c)** Install the R package `microbenchmark`. We will use this to discover the average duration (time) your function takes to execute code. Execute the following
+
+```{r, eval=FALSE}
+microbenchmark::microbenchmark( duniform( seq(-4,12,by=.0001), 4, 8), times=100)
+```
+        
+This will call the input R expression (your `duniform` function on a rather large vector of data) 100 times and report summary statistics on how long it took for the code to run. In particular, look at the median time for evaluation.
+
+**d)** Instead of using a `for` loop, it might have been easier to use an `ifelse()` command, which inherently accepts vectors. Rewrite your function one last time, this time avoiding the `for` loop and instead introducing the *vectorizable* `ifelse()` command. Verify that your function works correctly by producing a plot of a uniform density. Finally, run the `microbenchmark()` code above again. 
+
+
+```{r}
+duniform <- function(x, a, b){
+  output <- NULL
+  mutate(x == )
+  return(output)
+}
+```
+
+```
+
+
+
+
+**e)** Comment on Which version of your function was easier to write? Which ran faster?
+
+
+
+#########finish question 1 #############
+
+
+
+### Exercise 2 {-}
+
+I very often want to provide default values to a parameter that I pass to a function. For example, it is so common for me to use the `pnorm()` and `qnorm()` functions on the standard normal, that R will automatically use `mean=0` and `sd=1` parameters unless you tell R otherwise. This was discussed significantly in the chapter above. To get that behavior, we can set the default parameter values in the definition of a function. When the function is called, the user specified value is used, but if none is specified, the defaults are used. Look at the help page for the functions `dunif()`, and notice that there are a number of default parameters. 
+
+For your `duniform()` function provide default values of `0` and `1` for the arguments `a` and `b`. Demonstrate that your function is appropriately using the given default values by producing a graph of the density without specifying the `a` or `b` arguments. 
+
+
+```{r}
+
+```
+
+
+
+### Exercise 3 {-}
+
+A common data processing step is to *standardize* numeric variables by subtracting the mean and dividing by the standard deviation. Mathematically, the standardized value is defined as
+
+$$
+z = \frac{x-\bar{x}}{s}
+$$
+
+where $\bar{x}$ is the mean and $s$ is the standard deviation. 
+
+**a)** Create a function that takes an input vector of numerical values and produces an output vector of the standardized values.
+
+```{r, eval=FALSE}
+standardize <- function(x){
+  ## What goes here?
+}
+```
+
+**b)** Apply this function to each numeric column in a data frame using the `dplyr::across()` or the `dplyr::mutate_if()` commands. *This is often done in model algorithms that rely on numerical optimization methods to find a solution. By keeping the scales of different predictor covariates the same, the numerical optimization routines generally work better.* Below is some code that should really help once your `standardize()` function is working. The graphs may not look very different, but pay attention to the x- and y-axis scales!
+
+```{r, eval=FALSE}
+data( 'iris' )
+# Graph the pre-transformed data.
+ggplot(iris, aes(x=Sepal.Length, y=Sepal.Width, color=Species)) +
+  geom_point() +
+  labs(title='Pre-Transformation')
+
+# Standardize all of the numeric columns
+# across() selects columns and applies a function to them
+# there column select requires a dplyr column select command such
+# as starts_with(), contains(), or where().  The where() command
+# allows us to use some logical function on the column to decide
+# if the function should be applied or not.
+iris.z <- iris %>% mutate( across(where(is.numeric), standardize) )
+
+# Graph the post-transformed data.
+ggplot(iris.z, aes(x=Sepal.Length, y=Sepal.Width, color=Species)) +
+  geom_point() +
+  labs(title='Post-Transformation')
+```
+
+
+
+
+### Exercise 4 {-}
+
+In this exercise, you'll write a function that will output a vector of the first $n$ terms in the child's game *Fizz Buzz*. Your function should only accept the argument $n$, the number to which you wish to count.
+
+Here is a description of the game. The goal is to count as high as you can but substitute in the words `Fizz`, `Buzz` or `Fizz-Buzz` depending on the divisors of the number. Specifically, any number evenly divisible by $3$ should be substituted by "Fizz", any number evenly divisible by $5$ substituted by "Buzz", and if the number is divisible by both $3$ and $5$ (i.e. by $15$) substitute "Fizz-Buzz". So a sequence of integers output by your function should look like
+
+$$
+1, 2, Fizz, 4, Buzz, Fizz, 7, 8, Fizz, \dots
+$$
+*Hint: The `paste()` function will squish strings together. The remainder operator is `%%` where it is used as `9 %% 3 = 0`.*
+
+This problem was inspired by a wonderful YouTube [video](https://www.youtube.com/watch?v=QPZ0pIK_wsc) that describes how to write an appropriate loop to do this in JavaScript, but it should be easy enough to interpret what to do in R. I encourage you to try to write your function first before watching the video.
+
+
+
+```{r FizzBuzz}
+FizzBuzz<- function(n)
+{
+  output <- 1:n
+  index <- 0
+  for (index in output) {
+    if(index %% 3 != 0 & index %% 5 != 0) 
+    {
+      output[index] <- index
+    }
+    else
+    {
+      if(index %% 3 == 0 & index %% 5 != 0) output[index] <- 'Fizz'
+      if(index %% 3 != 0 & index %% 5 == 0) output[index] <- 'Buzz'
+      if(index %% 3 == 0 & index %% 5 == 0) output[index] <- 'FizzBuzz'
+    }
+  }
+
+  return(output)
+}
+
+FizzBuzz(30)
+
+# 
+# n<-30
+# 
+# output <- 1:n
+#   
+# if(n %% 3 != 0 & n %% 5 != 0) output <- index
+# if(n %% 3 == 0 & n %% 5 != 0) output <- 'Fizz'
+# if(n %% 3 != 0 & n %% 5 == 0) output <- 'Buzz'
+# if(n %% 3 == 0 & n %% 5 == 0) output <- 'FizzBuzz'
+# 
+# 
+
+```
+ 
+ *Conclusion:* In iterating through the given vector of intergers, a number which divisible by neither 3 or 5 returns the index's value is equal to the index. Otherwise, if divisible by 3 but NOT 5, 'Fizz' returns. If divisible by 5 but NOT 3, 'Buzz' returns. If the index is divisible by both 3 and 5, such as 15, 'FizzBuzz' returns.  
+

@@ -1,0 +1,239 @@
+---
+title: 'Chapter 11: Strings'
+author: "Sammi Bergman"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(stringr)
+```
+exc: 1, 2, 3
+
+
+### Exercise 1 {-}
+
+For the following regular expression, explain in words what it matches on. Then add test strings to demonstrate that it in fact does match on the pattern you claim it does. Make sure that your test set of strings has several examples that match as well as several that do not. Show at least two examples that return TRUE and two examples that return FALSE. *If you copy the Rmarkdown code for these exercises directly from my source pages, make sure to remove the `eval=FALSE` from the R-chunk headers.*
+
+Here is an example of what a solution might look like.
+
+**q)** This regular expression matches: 
+
+Any string that contains the lower-case letter "a".
+
+```{r, eval=TRUE}
+strings <- c('Adel', 'Mathematics', 'able', 'cheese')
+data.frame( string = strings ) %>%
+  mutate( result = str_detect(string, 'a') )
+```
+
+Please complete the questions below.
+
+**a)** This regular expression matches:  
+
+The string matches strings with the combination of *ab*. This does not include uppercase letters, however. Result produces a boolean in 'result'.
+```{r, eval=TRUE}
+strings <- c('able', 'apple', 'banana', 'abstract')
+data.frame( string = strings ) %>%
+  mutate( result = str_detect(string, 'ab') )
+```
+
+**b)** This regular expression matches:  
+
+This matches *a* or *b* 
+
+```{r, eval=TRUE}
+strings <- c('able', 'apple', 'banana', 'abstract', 'coconut', 'lemon')
+data.frame( string = strings ) %>%
+  mutate( result = str_detect(string, '[ab]') )
+```
+
+**c)** This regular expression matches:  
+
+This string identifies all strings which begin with *a* or *b*
+
+```{r, eval=TRUE}
+strings <- c('able', 'apple', 'banana', 'abstract', 'coconut', 'lemon', 'cucumber', 'eggplant')
+data.frame( string = strings ) %>%
+  mutate( result = str_detect(string, '^[ab]') )
+```
+
+**d)** This regular expression matches:  
+
+This string detects a repetition of digits, whitespace and then matches either a or A
+
+```{r, eval=TRUE}
+strings <- c('able', 'apple', 'banana', 'coconut', 'lemon', 'cucumber', 'eggplant', 'digi 1', 'potato2', '22 Apples')
+data.frame( string = strings ) %>%
+  mutate( result = str_detect(string, '\\d+\\s[aA]') )
+```
+
+**e)** This regular expression matches:  
+
+*Insert your answer here...*
+This expression matches a repitiion of starting with 1 or more digits, 0 or more repition of whitespace, and finially the use of a or A.
+
+```{r, eval=TRUE}
+strings <- c('22 apples', '3Artichokes', '13Artichokes', 'able', 'apple', 'banana', '3coconut', 'lemon ', '8 cucumber', 'a eggplant', 'digi 1', 'potato2', '22 Apples') 
+data.frame( string = strings ) %>%
+  mutate( result = str_detect(string, '\\d+\\s*[aA]') )
+```
+
+**f)** This regular expression matches:  
+
+This matches any character. As well, the dataframe intakes all of the inputs as strings, and therefore always detects the plausibility of characters, even if input is empty. 
+
+```{r, eval=TRUE}
+strings <- c('11', 'aa12', 'b1a', '', 123, 0, 0.001 )
+data.frame( string = strings ) %>%
+  mutate( result = str_detect(string, '.*') )
+```
+
+**g)** This regular expression matches:  
+
+This expression detects the use of 2 whitespaces and the specific permutaion of bar directly following. 
+
+```{r, eval=TRUE}
+strings <- c('--', '- boar', '..rab-- ..__bar', '__boar', '__bar', 'bar__', '\\ barnyard')
+data.frame( string = strings ) %>%
+  mutate( result = str_detect(string, '^\\w{2}bar') )
+```
+
+**h)** This regular expression matches:  
+
+This expression evaluates for some 2 characters or whitespaces, with 'bar' following. 
+
+```{r, eval=TRUE}
+strings <- c( '__boar', '__bar', 'bar__', '\\ barnyard', 'b1bar', 'foobar', 'tobarswego', '11baracudasswimming')
+data.frame( string = strings ) %>%
+  mutate( result = str_detect(string, '(foo\\.bar)|(^\\w{2}bar)') )
+```
+
+**Conclusion:** The use of escape sequences can allow for a diverse pattern search with more flexibility implemented for inputs. 
+
+
+
+    
+### Exercise 2 {-}
+
+The following file names were used in a camera trap study. The S number represents the site, P is the plot within a site, C is the camera number within the plot, the first string of numbers is the YearMonthDay and the second string of numbers is the HourMinuteSecond.
+
+```{r}
+file.names <- c( 'S123.P2.C10_20120621_213422.jpg',
+                 'S10.P1.C1_20120622_050148.jpg',
+                 'S187.P2.C2_20120702_023501.jpg')
+```
+
+Produce a data frame with columns corresponding to the `site`, `plot`, `camera`, `year`, `month`, `day`, `hour`, `minute`, and `second` for these three file names. So we want to produce code that will create the data frame:
+  
+```{r, eval=FALSE}
+ Site Plot Camera Year Month Day Hour Minute Second
+ S123   P2    C10 2012    06  21   21     34     22
+  S10   P1     C1 2012    06  22   05     01     48
+ S187   P2     C2 2012    07  02   02     35     01
+```
+
+
+```{r}
+mutant <- str_split_fixed(file.names, pattern = '_', n = 3 )
+sites <- mutant[ , 1]
+dates <- mutant[ ,2]
+times <-mutant[ ,3]
+
+#identify the pic ids and split up
+site.info <- str_split_fixed(sites, '\\.' , n = 3)
+site.id <- site.info[ , 1]
+plot.id <- site.info[ , 2]
+cam.id <- site.info[ , 3]
+
+site.info2 <- cbind(site.id, plot.id, cam.id)
+
+#get the specific date instance
+year <- str_sub(dates, start=1, end=4) # XXXX XX XX y - m - day
+month <- str_sub(dates, start=5, end=6)
+day <- str_sub(dates, start=7, end=8)
+
+date.deets <- cbind(year, month, day)
+
+time.info <-str_split_fixed(times, '\\.', n=2 )
+img.type <- time.info[ ,2]
+inst <- time.info [ ,1]
+
+hour <- str_sub(inst, start=1, end=2) # __XXXX
+min <- str_sub(inst, start=3, end=4)  # XX__XX
+sec <- str_sub(inst, start=5, end=6)  # XXXX__
+
+time.deets <- cbind(hour, min, sec)
+
+big.matr <- cbind(site.info2, date.deets, time.deets, img.type)
+big.df <- as.data.frame(big.matr)
+# Site Plot Camera Year Month Day Hour Minute Second
+
+final.df <- big.df %>%
+  select('Site' = site.id,
+         'Plot' = plot.id,
+         'Camera' = cam.id, 
+         'Year' = year,
+         'Month' = month,
+         'Day' = day,
+         'Hour' = hour,
+         'Minute' = min,
+         'Second' = sec)
+
+head(final.df)
+```
+
+**Conclusion:** By splitting up the string with each non-alphanumeric, you can further subset columns by the indicies until each value is seperated. Once it is, assuming you did not alter the order, you can stitch up the frame with cbind. Finally, rename and select the info of intrest. 
+
+
+
+### Exercise 3 {-}
+
+The full text from Lincoln's Gettysburg Address is given below. It has been provided in a form that includes lots of different types of white space. Your goal is to calculate the mean word length of Lincoln's Gettysburg Address! *Note: you may consider 'battle-field' as one word with 11 letters or as two words 'battle' and 'field'. The first option a bit more difficult and technical!*.
+
+
+
+```{r}
+Gettysburg <- 'Four score and seven years ago our fathers brought forth on this 
+continent, a new nation, conceived in Liberty, and dedicated to the proposition 
+that all men are created equal.
+
+Now we are engaged in a great civil war, testing whether that nation, or any 
+nation so conceived and so dedicated, can long endure. We are met on a great 
+battle-field of that war. We have come to dedicate a portion of that field, as 
+a final resting place for those who here gave their lives that that nation might 
+live. It is altogether fitting and proper that we should do this.
+
+But, in a larger sense, we can not dedicate -- we can not consecrate -- we can 
+not hallow -- this ground. The brave men, living and dead, who struggled here, 
+have consecrated it, far above our poor power to add or detract. The world will 
+little note, nor long remember what we say here, but it can never forget what 
+they did here. It is for us the living, rather, to be dedicated here to the 
+unfinished work which they who fought here have thus far so nobly advanced. It 
+is rather for us to be here dedicated to the great task remaining before us -- 
+that from these honored dead we take increased devotion to that cause for which 
+they gave the last full measure of devotion -- that we here highly resolve that 
+these dead shall not have died in vain -- that this nation, under God, shall 
+have a new birth of freedom -- and that government of the people, by the people, 
+for the people, shall not perish from the earth.'
+```
+
+
+```{r}
+
+Gettysburg.vect <- str_split_1(Gettysburg, pattern = '\\s')
+
+Gettysburg.df <- c(Gettysburg.vect) %>% 
+  as.data.frame() %>%
+  rename(word = '.') %>%
+  filter_out(word == '' | word == '--') %>%
+  mutate( result = str_replace(word, '\\W', '') )  %>%
+  mutate(letters = str_length(result))
+
+ave.letters <- mean(Gettysburg.df$letters)
+
+```
+
+**Conclusion:** The Gettysburg adrees has a mean letters per word of 4.2. In subsetting the string to smaller, more manageable strings, we can modify strings and use them to clean up or compute data. 

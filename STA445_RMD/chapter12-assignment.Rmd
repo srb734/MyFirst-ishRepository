@@ -1,0 +1,190 @@
+---
+title: 'Chapter 12: Dates and Times'
+author: "Sammi Bergman"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(lubridate)
+```
+
+
+## Exercises 1, 3, 4, 5 {#Exercises_Dates}
+
+### Exercise 1 {-}
+
+Convert the following to date or date/time objects.
+
+**a)** September 13, 2010.
+
+```{r}
+mdy('September 13, 2010')
+```
+
+
+**b)** Sept 13, 2010.
+
+```{r}
+# mdy('Sept 13 2010')
+
+```
+This date fails, as the function does not recogonize September with the t ending the abbreviation. On the other hand, September (unabbriviated) is recognized. 
+
+**c)** Sep 13, 2010.
+
+```{r}
+mdy('Sep 13, 2010')
+```
+
+**d)** S 13, 2010. Comment on the month abbreviation needs.
+
+```{r}
+#mdy('S 13, 2010')
+```
+
+The mdy function cannot recognize September from just the 'S', just as J could be either June or July. It is too abbreviated, where the correct would be Sep. 
+
+**e)** 07-Dec-1941.
+
+```{r}
+dmy('07-Dec-1941')
+```
+
+
+**f)** 1-5-1998. Comment on why you might be wrong.
+
+```{r}
+dmy('1-5-1998')
+mdy('1-5-1998')
+
+```
+
+We do not know if the order goes month-day-year or day-month-year, because 1-5 could be January 5th, or May 1st, which is a significant difference. 
+
+**g)** 21-5-1998. Comment on why you know you are correct.
+
+```{r}
+dmy('21-5-1998')
+```
+
+We know this date goes D-M-Y, because there are not 21 months in the year. 
+
+**h)** 2020-May-5 10:30 am
+
+```{r}
+ymd_hm('2020-May-5 10:30 am')
+```
+
+We do not specify the timezone, so the function assumes UTC as the standard. 
+
+**i)** 2020-May-5 10:30 am PDT (ex Seattle)
+
+```{r}
+ymd_hm('2020-May-5 10:30 am', tz = 'US/Pacific')
+```
+
+In looking at the provided wiki link of timezones, you can find the PDT locations. PDT and PT are not recognized, but they use the identifier 'US/Pacific' since you are looking specifically at pacific time. 
+
+**j)** 2020-May-5 10:30 am AST (ex Puerto Rico)
+
+```{r}
+ymd_hm('2020-May-5 10:30 am', tz = 'America/Puerto_Rico')
+```
+
+For Atlantic Standard time, we can use the identifier 'America/Puerto_Rico', as this is common island time in the carribean and similar vacation paradises. 
+
+### Exercise 3 {-}
+
+Suppose you have arranged for a phone call to be at 3 pm on May 8, 2025 at Arizona time. However, the recipient will be in Auckland, NZ. What time will it be there? 
+
+```{r}
+mdy_hm('05-08-2025 15:00', tz = "US/Arizona")
+call.time <- mdy_hm('May 8, 2025 3:00 PM', tz = "US/Arizona")
+#these produce the same output
+
+
+with_tz(call.time, 'NZ/Auckland')
+```
+
+**Conclusion:** If my bestie is in New Zeleand and I know he has a bedtime of 10:00 pm, I should probably call before 3 pm AZ time to not disrupt his slumber. 
+
+### Exercise 4 {-}
+
+From this book's [GitHub](https://github.com/BuscagliaR/STA_444_v2/) directory, navigate to the `data-raw` directory and then download the `Pulliam_Airport_Weather_Station.csv` data file. (*There are several weather station files. Make sure you get the correct one!*)  There is a `DATE` column (is it of type `date` when you import the data?) as well as the Maximum and Minimum temperature. For the last 5 years of data included in the file, plot the time series of daily maximum temperature with date on the x-axis. Write your code so that it will work if I update the date set. *Hint: Find the maximum date in the data set and then subtract 5 years. Will there be a difference if you use `dyears(5)` vs `years(5)`? Which seems more appropriate here?*
+
+
+```{r}
+Pulliam_Airport_Weather_Station <- read.csv("../data-raw/Pulliam_Airport_Weather_Station.csv")
+
+cleaned.ap.weather <- Pulliam_Airport_Weather_Station %>%
+  select(DATE, TMIN, TMAX)
+
+recent <- max(cleaned.ap.weather$DATE) #Max date is sept 15, 2019 and returns as a string
+yrs.ago5 <- ymd(recent) - dyears(5) #dyears provides a timestamp, which includes duration, years only display the period. 
+
+
+last.5.yrs <- cleaned.ap.weather %>%
+  filter(ymd(DATE) > yrs.ago5)
+
+ggplot(last.5.yrs, aes(x = DATE, y = TMAX, colour = month(DATE, label = TRUE))) +
+  geom_jitter() +
+  labs(x = "Time", y = "Max Temperature", title = "Pulliam Airport Temps")
+#month color added for pizzaz
+```
+
+### Exercise 5 {-}
+
+It turns out there is some interesting periodicity regarding the number of births on particular days of the year.
+
+**a)** Using the `mosaicData` package, load the data set `Births78` which records the number of children born on each day in the United States in 1978. Because this problem is intended to show how to calculate the information using the `date`, remove all the columns *except* `date` and `births`.
+
+```{r}
+library("mosaicData")
+data("Births78")
+
+cleaned.birth <- Births78 %>%
+  select(date, births)
+```
+
+
+**b)** Graph the number of `births` vs the `date` with date on the x-axis. What stands out to you? Why do you think we have this trend?
+
+```{r}
+library(ggplot2)
+
+ggplot(cleaned.birth, aes(x = date, y = births)) +
+  geom_point()+
+  geom_smooth()
+
+```
+
+**Conclusion:** We see 2 notable trends as 2 seperate waves. This seems like there may be some discrepency in the data, due to the vertical uniformity in the graph. I wonder if the lower bound was recorded at the beginning of the day, where as the upper bound was at the end of the day. 
+
+
+**c)** To test your assumption, we need to figure out the what day of the week each observation is. Use `dplyr::mutate` to add a new column named `dow` that is the day of the week (Monday, Tuesday, etc). This calculation will involve some function in the `lubridate` package and the `date` column.
+
+```{r}
+library(lubridate)
+
+mutated.births <- cleaned.birth %>%
+  mutate(dow = wday(date, label = TRUE)) #sunday = 1, sat = 7
+```
+
+
+**d)** Plot the data with the point color being determined by the day of the week variable.
+
+```{r}
+
+ggplot(mutated.births, aes(x = date, y = births, color = dow)) +
+  geom_point() +
+  theme_bw() +
+  labs(title = "Babies Born in 1978",
+  subtitle = "Colored by Day of Week")
+
+
+```
+
+**Conclusion:** By faceting by color, we can see a pattern of more babies being born Monday - Friday, and less on the weekends. This could suggest the babies want to sleep in on the weekend, thus remaining in utero. 
